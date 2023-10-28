@@ -349,4 +349,25 @@ $(GZ)/$(BUSYBOX_GZ):
 	$(CURL) $@ https://busybox.net/downloads/$(BUSYBOX_GZ)
 
 # merge
+MERGE += README.md Makefile apt.Linux
+MERGE += .gitignore .gitattributes .stignore .clang-format .editorconfig
+MERGE += .vscode bin doc lib ref src tmp dub.json ldc2.conf
+MERGE += all hw cpu arch app fw host root hello
 
+.PHONY: dev
+dev:
+	git push -v
+	git checkout $@
+	git pull -v
+	git checkout shadow -- $(MERGE)
+
+.PHONY: shadow
+shadow:
+	git push -v
+	git checkout $@
+	git pull -v
+
+.PHONY: release
+release:
+	git tag $(NOW)-$(REL)
+	git push -v --tags
