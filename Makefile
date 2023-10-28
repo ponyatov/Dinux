@@ -95,7 +95,8 @@ HELLO_SRC = $(wildcard hello/src/*.d) hello/dub.json dub.json ldc2.conf
 hello: $(HELLO_SRC)
 	$(DUB) $(RUN) :$@
 $(ROOT)/bin/hello: $(HELLO_SRC)
-	$(XPATH) $(DUB) build -m32 --compiler=$(GDC) :hello
+	$(XPATH) $(LDC2) -mtriple=$(TARGET) -of=$@ hello/src/app.d
+	file $@
 
 .PHONY: root
 root: $(ROOT)/bin/hello
@@ -276,6 +277,7 @@ BMAKE   = $(XPATH) make -C $(REF)/$(BUSYBOX) O=$(TMP)/$(BUSYBOX) \
           PREFIX=$(ROOT) CROSS_COMPILE=$(TARGET)-
 BCONFIG = $(TMP)/$(BUSYBOX)/.config
 
+# https://github.com/dslm4515/CMLFS
 .PHONY: ldc
 ldc: $(ROOT)/lib/ldc_rt.dso.o
 $(ROOT)/lib/ldc_rt.dso.o: $(TMP)/ldc_$(TARGET)/lib/ldc_rt.dso.o
