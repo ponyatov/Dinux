@@ -294,7 +294,7 @@ CFG_ZIP = --includedir=$(ROOT)/usr/include
 zlib: $(ROOT)/lib/libz.so
 $(ROOT)/lib/libz.so: $(REF)/$(ZLIB)/README.md
 	mkdir -p $(TMP)/$(ZLIB) ; cd $(TMP)/$(ZLIB) ;\
-	$(XPATH) CC=$(TARGET)-gcc $(REF)/$(ZLIB)/$(CFG_TARGET) $(CFG_ZIP) &&\
+	$(XPATH) CROSS_PREFIX=$(TARGET)- $(REF)/$(ZLIB)/$(CFG_TARGET) $(CFG_ZIP) &&\
 	$(XPATH) $(MAKE) -j$(CORES) && $(XPATH) $(MAKE) install
 
 # https://github.com/dslm4515/CMLFS
