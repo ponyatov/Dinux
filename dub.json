@@ -1,0 +1,7 @@
+{
+    "name":        "dinux",
+    "description": "embedded Linux infrastructure for D language",
+    "authors":    ["Dmitry Ponyatov <dponyatov@gmail.com>"],
+    "copyright":   "Copyright © 2023, Dmitry Ponyatov <dponyatov@gmail.com>",
+    "license":     "MIT"
+}

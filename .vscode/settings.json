@@ -1,0 +1,49 @@
+{
+    "multiCommand.commands": [
+        { "command": "multiCommand.f11",
+            "sequence": [ "workbench.action.files.saveAll",
+                { "command": "workbench.action.terminal.sendSequence",
+                    "args": {"text": "\u000D clear ; LANG=C make format \u000D"}}]},
+        { "command": "multiCommand.f12",
+            "sequence": [ "workbench.action.files.saveAll",
+                { "command": "workbench.action.terminal.sendSequence",
+                    "args": {"text": "\u000D clear ; LANG=C make hello \u000D"}}]}
+    ],
+
+    // files
+    "files.exclude": {
+        "root/lib/modules/*/build" : true,
+        "root/lib/modules/*/source": true,
+    },
+    "files.associations": {
+        "*.S"     : "gas",
+        "*.kernel": "makefile",
+        "*.uclibc": "makefile",
+        "*.bb"    : "makefile",
+    },
+
+    // editor
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "editor.rulers": [80],
+    "workbench.tree.indent": 24,
+    "explorer.autoReveal": false,
+    "files.insertFinalNewline": true,
+
+    // C++
+    "[c,cpp]": {
+        "editor.defaultFormatter": "xaver.clang-format",
+        "editor.formatOnSave":     true
+    },
+
+    // clang-format
+    "clang-format.executable":     "clang-format",
+    "clang-format.fallbackStyle":  "Google",
+    "clang-format.style": "file",
+
+    // D
+    "d.dubPath"    : "/usr/bin/dub",
+    "d.dmdPath"    : "/usr/bin/dmd",
+    "d.dubCompiler": "/usr/bin/dmd",
+}
