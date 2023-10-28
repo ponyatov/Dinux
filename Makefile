@@ -41,6 +41,8 @@ MUSL_VER     = 1.2.4
 BUSYBOX_VER  = 1.36.1
 ##
 ZLIB_VER     = 1.3
+# LLVM_VER     = 17.0.3
+LLVM_VER     = 15.0.7
 
 # package
 LDC         = ldc2-$(LDC_VER)
@@ -59,6 +61,8 @@ MUSL        = musl-$(MUSL_VER)
 BUSYBOX     = busybox-$(BUSYBOX_VER)
 ##
 ZLIB        = zlib-$(ZLIB_VER)
+LLVM        = llvm-$(LLVM_VER).src
+UNWIND      = libunwind-$(LLVM_VER).src
 ##
 BINUTILS_GZ = $(BINUTILS).tar.xz
 GCC_GZ      = $(GCC).tar.xz
@@ -71,6 +75,8 @@ MUSL_GZ     = $(MUSL).tar.gz
 BUSYBOX_GZ  = $(BUSYBOX).tar.bz2
 ##
 ZLIB_GZ     = $(ZLIB).tar.xz
+LLVM_GZ     = $(LLVM).tar.xz
+UNWIND_GZ   = $(UNWIND).tar.xz
 
 # tool
 CURL = curl -L -o
@@ -287,7 +293,17 @@ busybox: $(REF)/$(BUSYBOX)/README.md
 
 # cross libs
 .PHONY: libs
-libs: zlib
+libs: druntime zlib
+
+.PHONY: druntime
+druntime: $(ROOT)/lib/ldc_rt.dso.o
+$(ROOT)/lib/ldc_rt.dso.o: $(TMP)/ldc_$(TARGET)/lib/ldc_rt.dso.o
+	cp $(TMP)/ldc_$(TARGET)/lib/* $(ROOT)/lib/
+$(TMP)/ldc_$(TARGET)/lib/ldc_rt.dso.o: $(LBR) $(REF)/ldc-$(LDC_VER)-src/README.md
+	$(XPATH) CC=$(TARGET)-gcc $< -j$(CORES) --ldc $(LDC2)                     \
+	--buildDir $(TMP)/ldc_$(TARGET) --ldcSrcDir $(REF)/ldc-$(LDC_VER)-src     \
+	--targetSystem='Linux;UNIX' CMAKE_SYSTEM_NAME=Linux BUILD_SHARED_LIBS=ON  \
+	--dFlags="-mtriple=$(TARGET);-mcpu=$(CPU)" --cFlags="$(OPT_TARGET)"
 
 .PHONY: zlib
 CFG_ZIP = --includedir=$(ROOT)/usr/include
@@ -298,15 +314,13 @@ $(ROOT)/lib/libz.so: $(REF)/$(ZLIB)/README.md
 	$(XPATH) $(MAKE) -j$(CORES) && $(XPATH) $(MAKE) install
 
 # https://github.com/dslm4515/CMLFS
-.PHONY: ldc
-ldc: $(ROOT)/lib/ldc_rt.dso.o
-$(ROOT)/lib/ldc_rt.dso.o: $(TMP)/ldc_$(TARGET)/lib/ldc_rt.dso.o
-	cp $(TMP)/ldc_$(TARGET)/lib/* $(ROOT)/lib/
-$(TMP)/ldc_$(TARGET)/lib/ldc_rt.dso.o: $(LBR) $(REF)/ldc-$(LDC_VER)-src/README.md
-	$(XPATH) CC=$(TARGET)-gcc $< -j$(CORES) --ldc $(LDC2)                     \
-	--buildDir $(TMP)/ldc_$(TARGET) --ldcSrcDir $(REF)/ldc-$(LDC_VER)-src     \
-	--targetSystem='Linux;UNIX' CMAKE_SYSTEM_NAME=Linux BUILD_SHARED_LIBS=ON  \
-	--dFlags="-mtriple=$(TARGET);-mcpu=$(CPU)" --cFlags="$(OPT_TARGET)"
+# https://habr.com/ru/articles/591979/
+.PHONY: unwind
+CFG_UNWIND  = -DLIBUNWIND_ENABLE_SHARED=ON -DLIBUNWIND_ENABLE_CROSS_UNWINDING=ON
+CFG_UNWIND += -DLIBUNWIND_SYSROOT=$(ROOT)/unwind -DLIBUNWIND_TARGET_TRIPLE=$(TARGET)
+unwind: $(REF)/$(UNWIND)/README.md
+	mkdir -p $(TMP)/$(UNWIND) ; cd $(TMP)/$(UNWIND) ;\
+	$(XPATH) cmake -S $(REF)/$(UNWIND) -B $(TMP)/$(UNWIND) $(CFG_UNWIND)
 
 # rule
 $(REF)/$(GMP)/README: $(GZ)/$(GMP_GZ)
@@ -350,7 +364,7 @@ gz: $(LDC2) $(GZ)/$(LDC_SRC) \
 	$(GZ)/$(GMP_GZ) $(GZ)/$(MPFR_GZ) $(GZ)/$(MPC_GZ)       \
 	$(GZ)/$(BINUTILS_GZ) $(GZ)/$(GCC_GZ) $(GZ)/$(ISL_GZ)   \
 	$(GZ)/$(LINUX_GZ) $(GZ)/$(MUSL_GZ) $(GZ)/$(BUSYBOX_GZ) \
-	$(GZ)/$(ZLIB_GZ)
+	$(GZ)/$(ZLIB_GZ) $(GZ)/$(UNWIND_GZ)
 
 $(LDC2): $(GZ)/$(LDC_GZ)
 	cd /opt ; sudo sh -c "xzcat $< | tar x && touch $@"
@@ -382,6 +396,11 @@ $(GZ)/$(BUSYBOX_GZ):
 
 $(GZ)/$(ZLIB_GZ):
 	$(CURL) $@ https://www.zlib.net/$(ZLIB_GZ)
+
+$(GZ)/$(LLVM_GZ):
+	$(CURL) $@ https://github.com/llvm/llvm-project/releases/download/llvmorg-$(LLVM_VER)/$(LLVM).src.tar.xz
+$(GZ)/$(UNWIND_GZ):
+	$(CURL) $@ https://github.com/llvm/llvm-project/releases/download/llvmorg-$(LLVM_VER)/$(UNWIND_GZ)
 
 # merge
 MERGE += README.md Makefile apt.Linux
