@@ -1,0 +1,8 @@
+.git/**
+/rc
+bin/**
+tmp/**
+fw/**
+root/**
+host/**
+ref/**

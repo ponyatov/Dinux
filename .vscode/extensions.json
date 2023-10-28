@@ -1,0 +1,16 @@
+{
+    "recommendations": [
+        "ryuta46.multi-command",
+        // "ms-vscode.makefile-tools",
+        // D
+        // "webfreak.code-d",
+        "webfreak.dlang-bundle",
+        // C++
+        "ms-vscode.cpptools",
+        // LLVM
+        "rreverser.llvm",
+        "basdp.language-gas-x86",
+        // Linux
+        "maelvalais.autoconf",
+    ]
+}

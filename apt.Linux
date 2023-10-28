@@ -1,0 +1,6 @@
+git make curl rsync
+code meld clang-format
+d-apt-keyring dmd-compiler dmd-tools dub g++
+llvm-15 lld-15 libclang-15-dev
+build-essential flex bison bc bzip2 texinfo gdc
+gperf autoconf automake groff
