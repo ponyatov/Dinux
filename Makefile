@@ -224,6 +224,24 @@ linux: $(REF)/$(LINUX)/README.md
 	$(KMAKE) -j$(CORES) bzImage modules                            &&\
 	$(KMAKE)            modules_install headers_install && $(MAKE) fw
 
+.PHONY: musl
+
+MMAKE    = $(XPATH) make -C $(REF)/$(MUSL) O=$(TMP)/$(MUSL) \
+           ARCH=$(ARCH) PREFIX=$(ROOT)
+CFG_MUSL = --prefix=$(ROOT) --exec-prefix=$(ROOT)/musl/exec \
+		   --includedir=$(ROOT)/usr/include --syslibdir=$(ROOT)/lib \
+           --target=$(TARGET) CROSS_COMPILE=$(TARGET)- \
+		   --enable-optimize CFLAGS="$(OPT_TARGET)"
+# CFLAGS="-I$(ROOT)/usr/include $(OPT_TARGET)"
+
+musl: $(REF)/$(MUSL)/README.md
+	mkdir -p $(TMP)/$(MUSL) ; cd $(TMP)/$(MUSL)                    ;\
+	$(XPATH) $(REF)/$(MUSL)/configure $(CFG_MUSL)                 &&\
+	$(XPATH) $(MAKE) -j$(CORES) && $(XPATH) $(MAKE) install
+	git checkout root/sbin/ldd root/lib/ld-musl-$(ARCH).so.1
+
+.PHONY: busybox
+
 # rule
 $(REF)/$(GMP)/README: $(GZ)/$(GMP_GZ)
 	cd $(REF) ; tar zx < $< && mv GMP-$(GMP_VER) $(GMP) ; touch $@
