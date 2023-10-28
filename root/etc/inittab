@@ -1,0 +1,9 @@
+#::sysinit:/sbin/mdev -d
+::sysinit:/bin/mkdir /dev /proc /sys
+::sysinit:/bin/mount -t proc none /proc
+::sysinit:/bin/mount -t sysfs none /sys
+::sysinit:/bin/ls -la /dev
+
+#tty1::respawn:/bin/sh
+#ttyS0::respawn:/bin/sh
+console::respawn:/bin/sh
