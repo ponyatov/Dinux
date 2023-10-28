@@ -13,6 +13,6 @@
         "gdc":      ">=8.3.0"
     },
     "subPackages": [
-        "hello"
+        "hello", "dos"
     ]
 }

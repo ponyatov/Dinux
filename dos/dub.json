@@ -1,0 +1,12 @@
+{
+    "name":         "dos",
+    "description":  "D/os runtime",
+    "authors":     ["Dmitry Ponyatov <dponyatov@gmail.com>"],
+    "copyright":    "Copyright © 2023, Dmitry Ponyatov <dponyatov@gmail.com>",
+    "license":      "MIT",
+    "targetType":   "staticLibrary",
+    "targetPath":   "../lib",
+    "targetName":   "d",
+    "dependencies": {
+    }
+}

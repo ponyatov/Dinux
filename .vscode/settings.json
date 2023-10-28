@@ -7,7 +7,7 @@
         { "command": "multiCommand.f12",
             "sequence": [ "workbench.action.files.saveAll",
                 { "command": "workbench.action.terminal.sendSequence",
-                    "args": {"text": "\u000D clear ; LANG=C make hello \u000D"}}]}
+                    "args": {"text": "\u000D clear ; LANG=C make dos \u000D"}}]}
     ],
 
     // files

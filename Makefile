@@ -99,10 +99,14 @@ INITRD     = $(FW)/$(APP)_$(HW).cpio.gz
 CFG_TARGET = configure --prefix=$(ROOT)
 
 # src
-D += $(wildcard */src/*.d)
-J += $(wildcard */src/dub.json) dub.json ldc2.conf
+D += $(wildcard */src/*.d*)
+J += $(wildcard */dub.json) dub.json ldc2.conf
 
 # all
+.PHONY: dos
+dos:
+	$(DUB) $(BLD) :$@
+
 .PHONY: hello
 HELLO_SRC = $(wildcard hello/src/*.d) hello/dub.json dub.json ldc2.conf
 hello: $(ROOT)/bin/hello
