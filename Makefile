@@ -7,8 +7,8 @@ BRANCH  = $(shell git rev-parse --abbrev-ref HEAD)
 CORES  ?= $(shell grep processor /proc/cpuinfo | wc -l)
 
 # cross
-APP        ?= player
-HW          = qemu386
+APP        ?= hello
+HW         ?= qemu386
 include  all/all.mk
 include   hw/$(HW).mk
 include  cpu/$(CPU).mk
