@@ -276,6 +276,15 @@ BMAKE   = $(XPATH) make -C $(REF)/$(BUSYBOX) O=$(TMP)/$(BUSYBOX) \
           PREFIX=$(ROOT) CROSS_COMPILE=$(TARGET)-
 BCONFIG = $(TMP)/$(BUSYBOX)/.config
 
+.PHONY: ldc
+ldc: $(ROOT)/lib/ldc_rt.dso.o
+$(ROOT)/lib/ldc_rt.dso.o: $(TMP)/ldc_$(TARGET)/lib/ldc_rt.dso.o
+	cp $(TMP)/ldc_$(TARGET)/lib/* $(ROOT)/lib/
+$(TMP)/ldc_$(TARGET)/lib/ldc_rt.dso.o: $(LBR) $(REF)/ldc-$(LDC_VER)-src/README.md
+	$(XPATH) CC=$(TARGET)-gcc $< -j$(CORES) --ldc $(LDC2)                     \
+	--buildDir $(TMP)/ldc_$(TARGET) --ldcSrcDir $(REF)/ldc-$(LDC_VER)-src     \
+	--targetSystem='Linux;UNIX' CMAKE_SYSTEM_NAME=Linux BUILD_SHARED_LIBS=ON  \
+	--dFlags="-mtriple=$(TARGET);-mcpu=$(CPU)" --cFlags="$(OPT_TARGET)"
 
 # rule
 $(REF)/$(GMP)/README: $(GZ)/$(GMP_GZ)
@@ -371,3 +380,9 @@ shadow:
 release:
 	git tag $(NOW)-$(REL)
 	git push -v --tags
+
+ZIP = tmp/$(MODULE)_$(NOW)_$(REL)_$(BRANCH).zip
+zip:
+	git archive --format zip --output $(ZIP) HEAD
+	zip -r $(ZIP) root/usr/include root/lib/*.o root/lib/*.a root/lib/*.so*
+	ls -la $(ZIP)
