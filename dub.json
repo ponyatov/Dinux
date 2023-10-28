@@ -1,7 +1,18 @@
 {
-    "name":        "dinux",
-    "description": "embedded Linux infrastructure for D language",
-    "authors":    ["Dmitry Ponyatov <dponyatov@gmail.com>"],
-    "copyright":   "Copyright © 2023, Dmitry Ponyatov <dponyatov@gmail.com>",
-    "license":     "MIT"
+    "name":         "dinux",
+    "description":  "embedded Linux infrastructure for D language",
+    "authors":     ["Dmitry Ponyatov <dponyatov@gmail.com>"],
+    "copyright":    "Copyright © 2023, Dmitry Ponyatov <dponyatov@gmail.com>",
+    "license":      "MIT",
+    "targetPath":   "bin",
+    "toolchainRequirements": {
+        "dub":      ">=1.31.0",
+        "frontend": ">=2.105.0",
+        "dmd":      ">=2.105.0",
+        "ldc":      ">=2.102.0",
+        "gdc":      ">=8.3.0"
+    },
+    "subPackages": [
+        "hello"
+    ]
 }

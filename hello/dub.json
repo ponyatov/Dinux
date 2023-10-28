@@ -1,7 +1,11 @@
 {
-    "name":        "hello",
-    "description": "Hello World for Dinux",
-    "authors":    ["Dmitry Ponyatov <dponyatov@gmail.com>"],
-    "copyright":   "Copyright © 2023, Dmitry Ponyatov <dponyatov@gmail.com>",
-    "license":     "MIT"
+    "name":         "hello",
+    "description":  "Hello World for Dinux",
+    "authors":     ["Dmitry Ponyatov <dponyatov@gmail.com>"],
+    "copyright":    "Copyright © 2023, Dmitry Ponyatov <dponyatov@gmail.com>",
+    "license":      "MIT",
+    "targetPath":    "../bin",
+    "targetName":    "hello",
+    "dependencies": {
+    }
 }
