@@ -185,6 +185,28 @@ $(HOST)/bin/$(TARGET)-as: $(ROOT)/lib/libc.so
 	$(XPATH) $(REF)/$(BINUTILS)/$(CFG_HOST) $(CFG_BINUTILS1) &&\
 	$(MAKE) -j$(CORES) && $(MAKE) install
 
+GCC_DISABLE = --disable-shared --disable-decimal-float --disable-libgomp   \
+              --disable-libmudflap --disable-libssp --disable-libatomic    \
+              --disable-multilib --disable-bootstrap --disable-libquadmath \
+              --disable-nls --disable-libstdcxx-pch --disable-clocale
+GCC_ENABLE  = --enable-threads --enable-tls
+
+CFG_GCC0 = $(CFG_BINUTILS0)    $(WITH_GCCLIBS) --enable-languages="c"       \
+           --without-headers --with-newlib --disable-threads $(GCC_HOST)    \
+		   $(GCC_DISABLE)
+CFG_GCC1 = $(CFG_BINUTILS1)    $(WITH_GCCLIBS) --enable-languages="c,c++,d" \
+           --with-headers=$(ROOT)/usr/include                $(GCC_HOST)    \
+           $(GCC_DISABLE) $(GCC_ENABLE)
+
+gcc0: $(HOST)/bin/$(TARGET)-gcc
+$(HOST)/bin/$(TARGET)-gcc: $(HOST)/bin/$(TARGET)-ld $(REF)/$(GCC)/README.md \
+                           $(HOST)/lib/libmpfr.a $(HOST)/lib/libmpc.a
+	mkdir -p $(TMP)/$(GCC)-0 ; cd $(TMP)/$(GCC)-0                          ;\
+	$(XPATH) $(REF)/$(GCC)/$(CFG_HOST) $(CFG_GCC0)                        &&\
+	$(MAKE) -j$(CORES) all-gcc           && $(MAKE) install-gcc           &&\
+	$(MAKE) -j$(CORES) all-target-libgcc && $(MAKE) install-target-libgcc &&\
+	touch $@
+
 # rule
 $(REF)/$(GMP)/README: $(GZ)/$(GMP_GZ)
 	cd $(REF) ; tar zx < $< && mv GMP-$(GMP_VER) $(GMP) ; touch $@

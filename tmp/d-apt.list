@@ -1,0 +1,1 @@
+deb [trusted=yes] https://master.dl.sourceforge.net/project/d-apt/ d-apt main #APT repository for D (SourceForge)

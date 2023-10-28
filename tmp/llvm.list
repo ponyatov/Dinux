@@ -1,0 +1,8 @@
+deb http://apt.llvm.org/buster/ llvm-toolchain-buster main
+deb-src http://apt.llvm.org/buster/ llvm-toolchain-buster main
+# 15 
+deb http://apt.llvm.org/buster/ llvm-toolchain-buster-15 main
+deb-src http://apt.llvm.org/buster/ llvm-toolchain-buster-15 main
+# 16 
+deb http://apt.llvm.org/buster/ llvm-toolchain-buster-16 main
+deb-src http://apt.llvm.org/buster/ llvm-toolchain-buster-16 main
