@@ -39,6 +39,8 @@ ISL_VER      = 0.24
 LINUX_VER    = 6.5.6
 MUSL_VER     = 1.2.4
 BUSYBOX_VER  = 1.36.1
+##
+ZLIB_VER     = 1.3
 
 # package
 LDC         = ldc2-$(LDC_VER)
@@ -56,6 +58,8 @@ LINUX       = linux-$(LINUX_VER)
 MUSL        = musl-$(MUSL_VER)
 BUSYBOX     = busybox-$(BUSYBOX_VER)
 ##
+ZLIB        = zlib-$(ZLIB_VER)
+##
 BINUTILS_GZ = $(BINUTILS).tar.xz
 GCC_GZ      = $(GCC).tar.xz
 GMP_GZ      = $(GMP).tar.gz
@@ -65,6 +69,8 @@ ISL_GZ      = $(ISL).tar.bz2
 LINUX_GZ    = $(LINUX).tar.xz
 MUSL_GZ     = $(MUSL).tar.gz
 BUSYBOX_GZ  = $(BUSYBOX).tar.bz2
+##
+ZLIB_GZ     = $(ZLIB).tar.xz
 
 # tool
 CURL = curl -L -o
@@ -79,11 +85,12 @@ GDC  = $(TARGET)-gdc
 QEMU = qemu-system-$(ARCH)
 
 # cfg
-XPATH    = PATH=$(HOST)/bin:$(PATH)
-CFG_HOST = configure --prefix=$(HOST)
-BZIMAGE  = tmp/$(LINUX)/arch/x86/boot/bzImage
-KERNEL   = $(FW)/$(APP)_$(HW).kernel
-INITRD   = $(FW)/$(APP)_$(HW).cpio.gz
+XPATH      = PATH=$(HOST)/bin:$(PATH)
+CFG_HOST   = configure --prefix=$(HOST)
+BZIMAGE    = tmp/$(LINUX)/arch/x86/boot/bzImage
+KERNEL     = $(FW)/$(APP)_$(HW).kernel
+INITRD     = $(FW)/$(APP)_$(HW).cpio.gz
+CFG_TARGET = configure --prefix=$(ROOT)
 
 # src
 D += $(wildcard */src/*.d)
@@ -92,11 +99,12 @@ J += $(wildcard */src/dub.json) dub.json ldc2.conf
 # all
 .PHONY: hello
 HELLO_SRC = $(wildcard hello/src/*.d) hello/dub.json dub.json ldc2.conf
-hello: $(HELLO_SRC)
+hello: $(ROOT)/bin/hello
 	$(DUB) $(RUN) :$@
 $(ROOT)/bin/hello: $(HELLO_SRC)
-	$(XPATH) $(LDC2) -mtriple=$(TARGET) -of=$@ hello/src/app.d
-	file $@
+	$(XPATH) $(DUB) build --arch=$(TARGET) -of=$@ :hello
+# $(XPATH) $(LDC2) -mtriple=$(TARGET) -of=$@ hello/src/app.d
+# file $@
 
 .PHONY: root
 root: $(ROOT)/bin/hello
@@ -243,18 +251,6 @@ linux: $(REF)/$(LINUX)/README.md
 	$(KMAKE) -j$(CORES) bzImage modules                            &&\
 	$(KMAKE)            modules_install headers_install && $(MAKE) fw
 
-busybox: $(REF)/$(BUSYBOX)/README.md
-	mkdir -p $(TMP)/$(BUSYBOX) ; cd $(TMP)/$(BUSYBOX)               ;\
-	rm -f $(BCONFIG) ; $(BMAKE) allnoconfig                        &&\
-	cat $(CWD)/all/all.bb $(CWD)/arch/$(ARCH).bb                     \
-	    $(CWD)/cpu/$(CPU).bb $(CWD)/hw/$(HW).bb                      \
-	    $(CWD)/app/$(APP).bb                         >> $(BCONFIG) &&\
-	echo CONFIG_CROSS_COMPILER_PREFIX=\"$(TARGET)-\" >> $(BCONFIG) &&\
-	echo CONFIG_SYSROOT=\"$(ROOT)\"                  >> $(BCONFIG) &&\
-	echo CONFIG_PREFIX=\"$(ROOT)\"                   >> $(BCONFIG) &&\
-	python3 $(HOST)/bin/bb.py $(BCONFIG)                           &&\
-	$(BMAKE) menuconfig && $(BMAKE) -j$(CORES) && $(BMAKE) install
-
 .PHONY: musl
 
 MMAKE    = $(XPATH) make -C $(REF)/$(MUSL) O=$(TMP)/$(MUSL) \
@@ -276,6 +272,30 @@ musl: $(REF)/$(MUSL)/README.md
 BMAKE   = $(XPATH) make -C $(REF)/$(BUSYBOX) O=$(TMP)/$(BUSYBOX) \
           PREFIX=$(ROOT) CROSS_COMPILE=$(TARGET)-
 BCONFIG = $(TMP)/$(BUSYBOX)/.config
+
+busybox: $(REF)/$(BUSYBOX)/README.md
+	mkdir -p $(TMP)/$(BUSYBOX) ; cd $(TMP)/$(BUSYBOX)               ;\
+	rm -f $(BCONFIG) ; $(BMAKE) allnoconfig                        &&\
+	cat $(CWD)/all/all.bb $(CWD)/arch/$(ARCH).bb                     \
+	    $(CWD)/cpu/$(CPU).bb $(CWD)/hw/$(HW).bb                      \
+	    $(CWD)/app/$(APP).bb                         >> $(BCONFIG) &&\
+	echo CONFIG_CROSS_COMPILER_PREFIX=\"$(TARGET)-\" >> $(BCONFIG) &&\
+	echo CONFIG_SYSROOT=\"$(ROOT)\"                  >> $(BCONFIG) &&\
+	echo CONFIG_PREFIX=\"$(ROOT)\"                   >> $(BCONFIG) &&\
+	python3 $(HOST)/bin/bb.py $(BCONFIG)                           &&\
+	$(BMAKE) menuconfig && $(BMAKE) -j$(CORES) && $(BMAKE) install
+
+# cross libs
+.PHONY: libs
+libs: zlib
+
+.PHONY: zlib
+CFG_ZIP = --includedir=$(ROOT)/usr/include
+zlib: $(ROOT)/lib/libz.so
+$(ROOT)/lib/libz.so: $(REF)/$(ZLIB)/README.md
+	mkdir -p $(TMP)/$(ZLIB) ; cd $(TMP)/$(ZLIB) ;\
+	$(XPATH) CC=$(TARGET)-gcc $(REF)/$(ZLIB)/$(CFG_TARGET) $(CFG_ZIP) &&\
+	$(XPATH) $(MAKE) -j$(CORES) && $(XPATH) $(MAKE) install
 
 # https://github.com/dslm4515/CMLFS
 .PHONY: ldc
@@ -329,7 +349,8 @@ tmp/d-apt.list:
 gz: $(LDC2) $(GZ)/$(LDC_SRC) \
 	$(GZ)/$(GMP_GZ) $(GZ)/$(MPFR_GZ) $(GZ)/$(MPC_GZ)       \
 	$(GZ)/$(BINUTILS_GZ) $(GZ)/$(GCC_GZ) $(GZ)/$(ISL_GZ)   \
-	$(GZ)/$(LINUX_GZ) $(GZ)/$(MUSL_GZ) $(GZ)/$(BUSYBOX_GZ)
+	$(GZ)/$(LINUX_GZ) $(GZ)/$(MUSL_GZ) $(GZ)/$(BUSYBOX_GZ) \
+	$(GZ)/$(ZLIB_GZ)
 
 $(LDC2): $(GZ)/$(LDC_GZ)
 	cd /opt ; sudo sh -c "xzcat $< | tar x && touch $@"
@@ -358,6 +379,9 @@ $(GZ)/$(MUSL_GZ):
 	$(CURL) $@ https://musl.libc.org/releases/$(MUSL_GZ)
 $(GZ)/$(BUSYBOX_GZ):
 	$(CURL) $@ https://busybox.net/downloads/$(BUSYBOX_GZ)
+
+$(GZ)/$(ZLIB_GZ):
+	$(CURL) $@ https://www.zlib.net/$(ZLIB_GZ)
 
 # merge
 MERGE += README.md Makefile apt.Linux
