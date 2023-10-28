@@ -166,6 +166,25 @@ $(HOST)/lib/libisl.a: $(HOST)/lib/libgmp.a $(REF)/$(ISL)/README.md
 	$(REF)/$(ISL)/$(CFG_HOST) $(CFG_GCCLIBS0) --with-gmp=system --with-gmp-prefix=$(HOST) &&\
 	$(MAKE) -j$(CORES) && $(MAKE) install
 
+.PHONY: binutils0 gcc0 binutils1 gcc1
+
+CFG_BINUTILS0 = --disable-nls $(OPT_HOST) $(WITH_GCCLIBS) \
+                --target=$(TARGET) --with-sysroot=$(ROOT) \
+                --disable-multilib --disable-bootstrap
+CFG_BINUTILS1 = $(CFG_BINUTILS0) --enable-lto
+
+binutils0: $(HOST)/bin/$(TARGET)-ld
+$(HOST)/bin/$(TARGET)-ld: $(REF)/$(BINUTILS)/README.md
+	mkdir -p $(TMP)/$(BINUTILS)-0 ; cd $(TMP)/$(BINUTILS)-0 ;\
+	$(XPATH) $(REF)/$(BINUTILS)/$(CFG_HOST) $(CFG_BINUTILS0) &&\
+	$(MAKE) -j$(CORES) && $(MAKE) install
+
+binutils1: $(HOST)/bin/$(TARGET)-as
+$(HOST)/bin/$(TARGET)-as: $(ROOT)/lib/libc.so
+	mkdir -p $(TMP)/$(BINUTILS)-1 ; cd $(TMP)/$(BINUTILS)-1 ;\
+	$(XPATH) $(REF)/$(BINUTILS)/$(CFG_HOST) $(CFG_BINUTILS1) &&\
+	$(MAKE) -j$(CORES) && $(MAKE) install
+
 # rule
 $(REF)/$(GMP)/README: $(GZ)/$(GMP_GZ)
 	cd $(REF) ; tar zx < $< && mv GMP-$(GMP_VER) $(GMP) ; touch $@
