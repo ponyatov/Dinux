@@ -186,7 +186,7 @@ $(HOST)/lib/libisl.a: $(HOST)/lib/libgmp.a $(REF)/$(ISL)/README.md
 CFG_BINUTILS0 = --disable-nls $(OPT_HOST) $(WITH_GCCLIBS) \
                 --target=$(TARGET) --with-sysroot=$(ROOT) \
                 --disable-multilib --disable-bootstrap
-CFG_BINUTILS1 = $(CFG_BINUTILS0) --enable-lto
+CFG_BINUTILS1 = $(CFG_BINUTILS0) --enable-lto --enable-gold
 
 binutils0: $(HOST)/bin/$(TARGET)-ld
 $(HOST)/bin/$(TARGET)-ld: $(REF)/$(BINUTILS)/README.md
@@ -194,8 +194,8 @@ $(HOST)/bin/$(TARGET)-ld: $(REF)/$(BINUTILS)/README.md
 	$(XPATH) $(REF)/$(BINUTILS)/$(CFG_HOST) $(CFG_BINUTILS0) &&\
 	$(MAKE) -j$(CORES) && $(MAKE) install
 
-binutils1: $(HOST)/bin/$(TARGET)-as
-$(HOST)/bin/$(TARGET)-as: $(ROOT)/lib/libc.so
+binutils1: $(HOST)/bin/$(TARGET)-ld.gold
+$(HOST)/bin/$(TARGET)-ld.gold: $(ROOT)/lib/libc.so
 	mkdir -p $(TMP)/$(BINUTILS)-1 ; cd $(TMP)/$(BINUTILS)-1 ;\
 	$(XPATH) $(REF)/$(BINUTILS)/$(CFG_HOST) $(CFG_BINUTILS1) &&\
 	$(MAKE) -j$(CORES) && $(MAKE) install
@@ -203,7 +203,7 @@ $(HOST)/bin/$(TARGET)-as: $(ROOT)/lib/libc.so
 GCC_DISABLE = --disable-shared --disable-decimal-float --disable-libgomp   \
               --disable-libmudflap --disable-libssp --disable-libatomic    \
               --disable-multilib --disable-bootstrap --disable-libquadmath \
-              --disable-nls --disable-libstdcxx-pch --disable-clocale
+              --disable-libstdcxx-pch --disable-clocale
 GCC_ENABLE  = --enable-threads --enable-tls
 
 CFG_GCC0 = $(CFG_BINUTILS0)    $(WITH_GCCLIBS) --enable-languages="c"       \
