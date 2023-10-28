@@ -75,6 +75,7 @@ RUN  = run   --compiler=$(DC)
 BLD  = build --compiler=$(DC)
 LDC2 = /opt/$(LDC_HOST)/bin/ldc2
 LBR  = /opt/$(LDC_HOST)/bin/ldc-build-runtime
+GDC  = $(TARGET)-gdc
 QEMU = qemu-system-$(ARCH)
 
 # cfg
@@ -94,7 +95,7 @@ HELLO_SRC = $(wildcard hello/src/*.d) hello/dub.json dub.json ldc2.conf
 hello: $(HELLO_SRC)
 	$(DUB) $(RUN) :$@
 $(ROOT)/bin/hello: $(HELLO_SRC)
-	$(DUB) build --compiler=$(LDC2) --arch=$(TARGET) :hello
+	$(XPATH) $(DUB) build -m32 --compiler=$(GDC) :hello
 
 .PHONY: root
 root: $(ROOT)/bin/hello
@@ -214,8 +215,14 @@ gcc1: $(HOST)/bin/$(TARGET)-as $(REF)/$(GCC)/README.md    \
 	$(MAKE) -j$(CORES) all-target-libgcc    && $(MAKE) install-target-libgcc &&\
 	$(MAKE) -j$(CORES)     all-target-libstdc++-v3                           &&\
 	$(MAKE)            install-target-libstdc++-v3
-# $(MAKE) -j$(CORES)     all-target-libphobos                              &&\
-# $(MAKE)            install-target-libphobos
+
+.PHONY: phobos
+phobos:
+	mkdir -p $(TMP)/$(GCC)-1 ; cd $(TMP)/$(GCC)-1                             ;\
+	$(MAKE) -j$(CORES)     all-target-libphobos                              &&\
+	$(MAKE)            install-target-libphobos
+
+# https://gcc.gnu.org/pipermail/gcc-patches/2020-April/544083.html
 
 .PHONY: linux
 
@@ -235,6 +242,18 @@ linux: $(REF)/$(LINUX)/README.md
 	$(KMAKE) -j$(CORES) bzImage modules                            &&\
 	$(KMAKE)            modules_install headers_install && $(MAKE) fw
 
+busybox: $(REF)/$(BUSYBOX)/README.md
+	mkdir -p $(TMP)/$(BUSYBOX) ; cd $(TMP)/$(BUSYBOX)               ;\
+	rm -f $(BCONFIG) ; $(BMAKE) allnoconfig                        &&\
+	cat $(CWD)/all/all.bb $(CWD)/arch/$(ARCH).bb                     \
+	    $(CWD)/cpu/$(CPU).bb $(CWD)/hw/$(HW).bb                      \
+	    $(CWD)/app/$(APP).bb                         >> $(BCONFIG) &&\
+	echo CONFIG_CROSS_COMPILER_PREFIX=\"$(TARGET)-\" >> $(BCONFIG) &&\
+	echo CONFIG_SYSROOT=\"$(ROOT)\"                  >> $(BCONFIG) &&\
+	echo CONFIG_PREFIX=\"$(ROOT)\"                   >> $(BCONFIG) &&\
+	python3 $(HOST)/bin/bb.py $(BCONFIG)                           &&\
+	$(BMAKE) menuconfig && $(BMAKE) -j$(CORES) && $(BMAKE) install
+
 .PHONY: musl
 
 MMAKE    = $(XPATH) make -C $(REF)/$(MUSL) O=$(TMP)/$(MUSL) \
@@ -252,6 +271,11 @@ musl: $(REF)/$(MUSL)/README.md
 	git checkout root/sbin/ldd root/lib/ld-musl-$(ARCH).so.1
 
 .PHONY: busybox
+
+BMAKE   = $(XPATH) make -C $(REF)/$(BUSYBOX) O=$(TMP)/$(BUSYBOX) \
+          PREFIX=$(ROOT) CROSS_COMPILE=$(TARGET)-
+BCONFIG = $(TMP)/$(BUSYBOX)/.config
+
 
 # rule
 $(REF)/$(GMP)/README: $(GZ)/$(GMP_GZ)
