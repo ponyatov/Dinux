@@ -130,6 +130,52 @@ distclean:
 clean:
 	rm -rf ref       ; git checkout ref
 
+# cross
+OPT_NATIVE = -O2 -march=native -mtune=native
+OPT_HOST   = CFLAGS="$(OPT_NATIVE)" CXXFLAGS="$(OPT_NATIVE)"
+OPT_TARGET = -O2 -march=$(ARCH) -mcpu=$(CPU) -mtune=$(CPU)
+
+.PHONY:   gcclibs0 gmp0 mpfr0 mpc0 isl0
+gcclibs0: gmp0 mpfr0 mpc0 isl0
+
+WITH_GCCLIBS = --with-gmp=$(HOST) --with-mpfr=$(HOST) \
+               --with-mpc=$(HOST) --with-isl=$(HOST)
+CFG_GCCLIBS0 = $(WITH_GCCLIBS) --disable-shared $(OPT_HOST)
+
+gmp0: $(HOST)/lib/libgmp.a
+$(HOST)/lib/libgmp.a: $(REF)/$(GMP)/README
+	mkdir -p $(TMP)/$(GMP)-0 ; cd $(TMP)/$(GMP)-0 ;\
+	$(REF)/$(GMP)/$(CFG_HOST) $(CFG_GCCLIBS0) &&\
+	$(MAKE) -j$(CORES) && $(MAKE) install
+
+mpfr0: $(HOST)/lib/libmpfr.a
+$(HOST)/lib/libmpfr.a: $(HOST)/lib/libgmp.a $(REF)/$(MPFR)/README.md
+	mkdir -p $(TMP)/$(MPFR)-0 ; cd $(TMP)/$(MPFR)-0 ;\
+	$(REF)/$(MPFR)/$(CFG_HOST) $(CFG_GCCLIBS0) &&\
+	$(MAKE) -j$(CORES) && $(MAKE) install
+
+mpc0: $(HOST)/lib/libmpc.a
+$(HOST)/lib/libmpc.a: $(HOST)/lib/libgmp.a $(REF)/$(MPC)/README.md
+	mkdir -p $(TMP)/$(MPC)-0 ; cd $(TMP)/$(MPC)-0 ;\
+	$(REF)/$(MPC)/$(CFG_HOST) $(CFG_GCCLIBS0) &&\
+	$(MAKE) -j$(CORES) && $(MAKE) install
+
+isl0: $(HOST)/lib/libisl.a
+$(HOST)/lib/libisl.a: $(HOST)/lib/libgmp.a $(REF)/$(ISL)/README.md
+	mkdir -p $(TMP)/$(ISL)-0 ; cd $(TMP)/$(ISL)-0 ;\
+	$(REF)/$(ISL)/$(CFG_HOST) $(CFG_GCCLIBS0) --with-gmp=system --with-gmp-prefix=$(HOST) &&\
+	$(MAKE) -j$(CORES) && $(MAKE) install
+
+# rule
+$(REF)/$(GMP)/README: $(GZ)/$(GMP_GZ)
+	cd $(REF) ; tar zx < $< && mv GMP-$(GMP_VER) $(GMP) ; touch $@
+$(REF)/%/README.md: $(GZ)/%.tar.gz
+	cd $(REF) ;  zcat $< | tar x && touch $@
+$(REF)/%/README.md: $(GZ)/%.tar.xz
+	cd $(REF) ; xzcat $< | tar x && touch $@
+$(REF)/%/README.md: $(GZ)/%.tar.bz2
+	cd $(REF) ; bzcat $< | tar x && touch $@
+
 # doc
 .PHONY: doc
 doc: doc/yazyk_programmirovaniya_d.pdf doc/Programming_in_D.pdf
